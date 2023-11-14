@@ -1,0 +1,42 @@
+{
+  "name": "job-saver",
+  "displayName": "Job saver",
+  "version": "0.0.1",
+  "description": "Zeds job saving extension",
+  "author": "Zed Bailey",
+  "scripts": {
+    "dev": "plasmo dev",
+    "build": "plasmo build",
+    "test": "plasmo test"
+  },
+  "dependencies": {
+    "@plasmohq/messaging": "^0.6.0",
+    "google-auth-library": "^9.2.0",
+    "google-spreadsheet": "^4.1.1",
+    "plasmo": "0.84.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "@ianvs/prettier-plugin-sort-imports": "4.1.1",
+    "@types/chrome": "0.0.251",
+    "@types/node": "20.9.0",
+    "@types/react": "18.2.37",
+    "@types/react-dom": "18.2.15",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31",
+    "prettier": "3.0.3",
+    "tailwindcss": "^3.3.5",
+    "typescript": "5.2.2"
+  },
+  "manifest": {
+    "permissions": [
+      "activeTab",
+      "tabs"
+    ],
+    "host_permissions": [
+      "https://*/*",
+      "http://*/*"
+    ]
+  }
+}
