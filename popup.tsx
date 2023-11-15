@@ -155,7 +155,8 @@ function IndexPopup() {
               </svg>
             : null
           }
-          Save Job
+          {isSaving ? "Saving..." : "Save Job"}
+          
         </button>
       </form>
       
