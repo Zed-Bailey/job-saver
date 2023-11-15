@@ -10,6 +10,7 @@ import "./style.css"
 import { Storage } from "@plasmohq/storage";
 import { SettingsIcon } from "~icons/SettingsIcon";
 import { SheetIcon } from "~icons/SheetIcon";
+import toast, { Toaster } from "react-hot-toast";
 
 const SCOPES = [
   'https://www.googleapis.com/auth/spreadsheets',
@@ -28,6 +29,9 @@ function IndexPopup() {
   const [jwtToken, setJwtToken] = useState<null | JWT>(null);
   const [errors, setErrors] = useState<string[]>([]);
   
+  const [isSaving, setIsSaving] = useState(false);
+
+
   const [formState, setFormState] = useState<PageData>({
     url: "",
     company: "",
@@ -35,14 +39,23 @@ function IndexPopup() {
   });
 
   async function addNewJob(data: PageData) {
-    await googleDoc.loadInfo();
-    console.log(googleDoc.title);
-    await googleDoc.sheetsByIndex[0].addRow({
-      company: data.company,
-      role: data.role,
-      url: data.url
-    });
-  
+    setIsSaving(true);
+    try {
+    
+      await googleDoc.loadInfo();
+      
+      await googleDoc.sheetsByIndex[0].addRow({
+        company: data.company,
+        role: data.role,
+        url: data.url
+      });
+      toast.success("Saved Job");
+    } catch(e) {
+      toast.error("Failed to save job")
+    } finally {
+      setIsSaving(false);
+    }
+    
   }
 
   async function parsePageForDetails() {
@@ -120,10 +133,11 @@ function IndexPopup() {
     addNewJob(formState);
   }
   
-  console.log(errors);
+  
   return (
     <div className="w-64 py-3">
-      <h2 className="text-center text-lg">Job Save-I-nator</h2>
+      <Toaster/>
+      <h2 className="text-center text-lg">Job Save-in-ator</h2>
       
       <form onSubmit={onSubmit} className="flex flex-col gap-2">
         <FormField id={"role"} placeholder={"Role"} value={formState.role} onFieldChange={onFieldChange} label={"Job Role"}/>
@@ -132,8 +146,15 @@ function IndexPopup() {
         
         <button type="submit"
          disabled={errors.length != 0}
-         className="rounded-lg hover:bg-blue-500 hover:text-white font-bold p-2 mx-2"
+         className="rounded-lg hover:bg-indigo-500 bg-indigo-200 text-indigo-800 hover:text-white font-bold p-2 mx-2 flex justify-center items-center"
         >
+          { isSaving ? 
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            : null
+          }
           Save Job
         </button>
       </form>
