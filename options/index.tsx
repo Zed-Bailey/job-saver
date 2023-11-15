@@ -35,16 +35,16 @@ function OptionsIndex() {
         sheetUrl: ""
     });
 
-    const onDocUrlChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setError(null);
-        setFormState({ ...formState, sheetUrl: e.target.value });
-
+    function parseUrl(urlString) {
+        // validate url
         try {
-            let url = new URL(e.target.value);
+            let url = new URL(urlString);
+            // validate that the host is google docs
             if(url.hostname !== "docs.google.com") {
                 setError("Only google sheets are supported");
                 return;
             }
+            // get the document id from the pathname
             let sections = url.pathname.split('/');
             if(sections.length >= 4) {
                 setDocId(sections[3]);
@@ -57,6 +57,13 @@ function OptionsIndex() {
         }
     }
 
+    const onDocUrlChange = (e: ChangeEvent<HTMLInputElement>) => {
+        setError(null);
+        setFormState({ ...formState, sheetUrl: e.target.value });
+        parseUrl(e.target.value);
+        
+    }
+
     const clearFields = async () => {
         await storage.removeAll();
         setFormState({
@@ -67,10 +74,11 @@ function OptionsIndex() {
     }
 
     useEffect(() => {
+        // load existing data from storage
         async function loadFromStorage() {
             const key = await storage.get('jsonKey');
             const sheet = await storage.get('sheet');
-
+            parseUrl(sheet);
             setFormState({
                 jsonKey: key,
                 sheetUrl: sheet
@@ -90,6 +98,7 @@ function OptionsIndex() {
             return;
         }
 
+        // parse the json to check if it's valid
         try {
             let json = JSON.parse(formState.jsonKey);
             if(json.client_email == null) {
@@ -133,7 +142,7 @@ function OptionsIndex() {
                                     error != null ? <p className="text-red-500">{error}</p> : <></>
                                 }
                                 {
-                                    docId !== "" ? <p>sheet id: {docId}</p> : <></>
+                                    docId !== "" ? <p className="text-xs italic">sheet id: {docId}</p> : <></>
                                 }
                             </>
                         </div>
@@ -170,7 +179,7 @@ function OptionsIndex() {
 
                     <hr className="mt-4 mb-2"/>
                     <div className="w-full border-2 border-red-500 rounded-lg p-2">
-                        <h2 className="text-lg text-red-600">DANGER!</h2>
+                        <h2 className="text-lg text-red-600 font-bold tracking-wider">DANGER!</h2>
                         <button className="flex justify-center items-center gap-2 w-full hover:bg-red-500 p-2 rounded-lg mt-3 text-red-500 hover:text-white font-medium" onClick={clearFields}>
                             <TrashIcon className="w-5 h-5 "/>
                             Clear Config
@@ -220,6 +229,7 @@ function SetupInformation() {
             <h2 className="text-xl mt-3">Connecting To The Sheet</h2>
             <ol className="list-decimal ml-5">
                 <li>Copy the url of the sheet shared with the service account to the "Google Sheets Url" field above</li>
+                <li>Ensure the sheet has columns with the following headers: "company", "role", "url"</li>
                 <li>Copy the contents of the JSON key file downloaded from "Creating A Service Account" into the "JSON Key" field above</li>
                 <li>Press the "Save" button</li>
             </ol>
