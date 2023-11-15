@@ -9,7 +9,18 @@ export const config: PlasmoCSConfig = {
   all_frames: true,  
 }
 
-const scrapeUrl = () => window.location.href;
+const scrapeUrl = () => {
+  let location = window.location.href
+  let url = new URL(location);
+  let sections = url.pathname.split('/');
+  
+  if(sections[1] !== "viewjob") {
+    let key = url.search.replace("?vjk=", "");
+    return `${url.origin}/viewjob?jk=${key}`;
+  }
+
+  return url.toString();
+}
 const scrapeJobTitle = () => {
   let ele = document.querySelector("[class*='-title-container']");
   let text = ele.textContent;
