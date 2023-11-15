@@ -5,35 +5,32 @@ import type { PageData } from "~PageData";
 
 
 export const config: PlasmoCSConfig = {
-  matches: ["https://au.indeed.com/*"],
+  matches: ["https://seek.com.au/*"],
   all_frames: true,  
 }
 
 const scrapeUrl = () => {
   let location = window.location.href
-  let url = new URL(location);
-  let sections = url.pathname.split('/');
   
-  if(sections[1] !== "viewjob") {
-    let key = url.search.replace("?vjk=", "");
-    return `${url.origin}/viewjob?jk=${key}`;
-  }
-
-  return url.toString();
+  return location;
 }
+
+
 const scrapeJobTitle = () => {
-  let ele = document.querySelector("[class*='-title-container']");
-  let text = ele.textContent;
+  let ele = document.querySelector("[data-automation='job-detail-title']");
+  let text = ele.innerText;
   return text;
 }
+
 
 const scrapeCompany = () => {
-  let ele = document.querySelector("[data-company-name='true']")
-  let text = ele.textContent;
+  let ele =  document.querySelector("[data-automation='advertiser-name']");
+  let text = ele.innerText;
   return text;
 }
 
-const ScrapeIndeedPage = () => {
+
+const ScrapeSeekPage = () => {
     useMessage<string, PageData>(async (req, res) => {
         res.send({
           company: scrapeCompany(),
@@ -44,4 +41,4 @@ const ScrapeIndeedPage = () => {
 }
 
 
-export default ScrapeIndeedPage;
+export default ScrapeSeekPage;
