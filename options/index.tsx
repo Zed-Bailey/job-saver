@@ -12,7 +12,8 @@ type OptionsFormState =  {
     jsonKey: string
 };
 
-const jsonKeyPlaceholder = `{
+const jsonKeyPlaceholder = `JSON key should look similar to the following
+{
     "type": "service_account",
     "project_id": "",
     "private_key_id": "",

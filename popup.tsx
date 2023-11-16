@@ -26,7 +26,6 @@ const storage = new Storage();
 function IndexPopup() {
   const [docId, setDocId] = useState("");
   const [googleDoc, setGoogleDoc] = useState<null | GoogleSpreadsheet>(null);
-  const [jwtToken, setJwtToken] = useState<null | JWT>(null);
   const [errors, setErrors] = useState<string[]>([]);
   
   const [isSaving, setIsSaving] = useState(false);
@@ -74,50 +73,58 @@ function IndexPopup() {
   }
 
   async function loadConfigFromStorage() {
-    const key = await storage.get('jsonKey');
-    const sheet = await storage.get('sheet');
-    let jsonKey: any;
-    
     try {
-      jsonKey = JSON.parse(key);
-    } catch(e) {
-      setErrors([...errors, 'Failed to parse JSON key. Update config in extension options page']);
-      return;
-    }
 
-    let token = new JWT({
-      email: jsonKey.client_email,
-      key: jsonKey.private_key,
-      scopes: SCOPES,
-    });
-
-    setJwtToken(token);
-    
-    try {
-      let url = new URL(sheet);
-      if(url.hostname !== "docs.google.com") {
-        setErrors([...errors, "Only google sheets are supported"]);
-        return;
-      }
-      let sections = url.pathname.split('/');
-      if(sections.length >= 4) {
-        setGoogleDoc(new GoogleSpreadsheet(sections[3], token));
-        setDocId(sections[3]);
-        
-      } else {
-        setErrors([...errors, "Could not parse document id from url"]);
-      }
+      const key = await storage.get('jsonKey');
+      const sheet = await storage.get('sheet');
+      let jsonKey: any;
       
+      if(key == null) {
+        throw new Error("JSON key not set");
+      }
+
+      try {
+        jsonKey = JSON.parse(key);
+      } catch(e) {
+        throw new Error('JSON key is invalid JSON');
+      }
+
+      // create a new google auth jwt token
+      let token = new JWT({
+        email: jsonKey.client_email,
+        key: jsonKey.private_key,
+        scopes: SCOPES,
+      });
+      
+      try {
+        let url = new URL(sheet);
+        
+        if(url.hostname !== "docs.google.com") {
+          throw new Error("Only google sheets are supported");
+        }
+
+        let sections = url.pathname.split('/');
+        if(sections.length >= 4) {
+          setGoogleDoc(new GoogleSpreadsheet(sections[3], token));
+          setDocId(sections[3]);
+          
+        } else {
+          throw new Error("Could not parse document id from url");
+        }
+        
+      } catch(e) {
+        throw new Error('Invalid URL');
+      }
     } catch(e) {
-      setErrors([...errors, "Invalid url"]);
+      setErrors([...errors, e.message]);
     }
+    
   }
 
 
   useEffect(() => {
-    
     loadConfigFromStorage();
-
+    
     parsePageForDetails();
   }, []);
   
@@ -135,7 +142,7 @@ function IndexPopup() {
   
   
   return (
-    <div className="w-64 py-3">
+    <div className="w-fit m-3">
       <Toaster/>
       <h2 className="text-center text-lg">Job Save-in-ator</h2>
       
@@ -146,7 +153,7 @@ function IndexPopup() {
         
         <button type="submit"
          disabled={errors.length != 0}
-         className="rounded-lg hover:bg-indigo-500 bg-indigo-200 text-indigo-800 hover:text-white font-bold p-2 mx-2 flex justify-center items-center"
+         className="rounded-lg hover:bg-indigo-500 bg-indigo-200 text-indigo-800 hover:text-white font-bold p-2 flex justify-center items-center"
         >
           { isSaving ? 
               <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -161,16 +168,23 @@ function IndexPopup() {
       </form>
       
 
-      <ul className="text-red-500">
-         { errors.map((value, index) => <li key={index}>{value}</li>) }
+      <ul className="text-red-500 w-72 mt-2">
+         { errors.map((value, index) => <li key={index} className="">{value}</li> ) }
       </ul>
 
-    <div className="w-full flex flex-row items-center justify-evenly mt-2">
+    <div className="w-full flex flex-row items-center justify-evenly mt-2 px-1">
       <a
+        onClick={(e) => {
+          if(docId == "") {
+            e.preventDefault();
+            toast.error("Sheet not configured")
+          }
+        }}
         href={`https://docs.google.com/spreadsheets/d/${docId}/edit#gid=0`}
         target="_blank"
         rel="noreferrer"
-        className="flex justify-center items-center gap-2 p-2 rounded-lg hover:bg-gray-100 font-medium"
+        className="flex justify-center items-center gap-2 p-2 rounded-lg hover:bg-gray-100 font-medium min-w-fit"
+        
       >
         <SheetIcon className={"w-5 h-5"}/>
         View Sheet
@@ -183,7 +197,7 @@ function IndexPopup() {
           chrome.runtime.openOptionsPage();
         }
       }}
-      className="flex justify-center items-center gap-2 p-2 rounded-lg hover:bg-gray-100 font-medium"
+      className="flex justify-center items-center gap-2 p-2 rounded-lg hover:bg-gray-100 font-medium min-w-fit"
       >
          <SettingsIcon className="w-5 h-5"/>
          options panel
@@ -196,10 +210,10 @@ function IndexPopup() {
 
 function FormField({placeholder, value, id, required=true, onFieldChange, label}) {
   return (
-    <div className="flex flex-col m-1">
-      <label htmlFor={id}>{label}</label>
+    <div className="flex flex-col">
+      <label htmlFor={id} className="text-xs">{label}</label>
       <input
-        className="p-2 border rounded-lg"
+        className="p-2 border rounded-lg w-72"
         required={required} 
         type="text" 
         placeholder={placeholder}
