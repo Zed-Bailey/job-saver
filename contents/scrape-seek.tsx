@@ -5,7 +5,7 @@ import type { PageData } from "~PageData";
 
 
 export const config: PlasmoCSConfig = {
-  matches: ["https://seek.com.au/*"],
+  matches: ["https://www.seek.com.au/*"],
   all_frames: true,  
 }
 
@@ -18,26 +18,26 @@ const scrapeUrl = () => {
 
 const scrapeJobTitle = () => {
   let ele = document.querySelector("[data-automation='job-detail-title']");
-  let text = ele.innerText;
+  let text = ele.textContent;
   return text;
 }
 
 
 const scrapeCompany = () => {
   let ele =  document.querySelector("[data-automation='advertiser-name']");
-  let text = ele.innerText;
+  let text = ele.textContent;
   return text;
 }
 
 
 const ScrapeSeekPage = () => {
-    useMessage<string, PageData>(async (req, res) => {
-        res.send({
-          company: scrapeCompany(),
-          role: scrapeJobTitle(),
-          url: scrapeUrl()
-        });
-    });
+  useMessage<string, PageData>(async (req, res) => {
+      res.send({
+        company: scrapeCompany(),
+        role: scrapeJobTitle(),
+        url: scrapeUrl()
+      });
+  });
 }
 
 
