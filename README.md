@@ -8,20 +8,41 @@ Currently the extension connects to a google sheet via a service account that ha
 In the future this would ideally be done through oauth so the user doesn't have to create a google cloud project and generate the keys for the service account
 
 
-The project has been built using React, TailwindCSS and the [Plasmo framework](https://docs.plasmo.com/) 
+The project has been built using React, Tailwind CSS and the [Plasmo framework](https://docs.plasmo.com/) 
 
 
 ## Supported browsers
-This extension has only been tested on **Chrome** and **Firefox**
+This extension has only been tested on **Chrome** and **Firefox** browsers
 
 
 ## Supported sites for prefill
-currently the prefill functionality supports the following sites
-- au.indeed.com
-- seek.com.au
-- linkedin
+Currently the prefill functionality supports the following sites
+- [X] au.indeed.com
+- [X] seek.com.au
+- [X] linkedin.com
 
-job details can still be manually entered from sites that are not currently supported
+Job details can still be manually entered from sites that are not currently supported
+
+## What's it look like?
+With no forms prefilled the extension will look like the below image
+
+The "View Sheet" button will open the connected google sheet in a new tab.
+
+The "options panel" button will open the extensions configuration page where the google sheet and json key can be configured.
+
+<p align="center">
+    <img src="docs/extension.png" style="border: 2px solid; border-color:black;"/> 
+</p>
+
+### Extension in action
+the below GIF shows the extension adding a job from indeed. The form fields are prefilled from the job posting for ease of use.
+
+When the save button is clicked the role is added to the google sheet.
+
+<p align="center">
+    <img src="docs/indeed_save.gif"/> 
+</p>
+
 
 ## Configuration
 To configure the key for the service account and the google sheets url, open the extension and click the "options panel" button.
