@@ -153,7 +153,7 @@ function IndexPopup() {
         
         <button type="submit"
          disabled={errors.length != 0}
-         className="rounded-lg hover:bg-indigo-500 bg-indigo-200 text-indigo-800 hover:text-white font-bold p-2 flex justify-center items-center"
+         className="rounded-lg hover:bg-indigo-500 bg-indigo-400 text-white font-bold p-2 flex justify-center items-center"
         >
           { isSaving ? 
               <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -202,6 +202,15 @@ function IndexPopup() {
          <SettingsIcon className="w-5 h-5"/>
          options panel
       </button>
+    </div>
+    <div className="w-full flex justify-center mt-2">
+      <a 
+        target="_blank"
+        rel="noreferrer"
+        href="https://github.com/Zed-Bailey/job-saver" className="hover:underline text-sm"
+      >
+        Project Github
+      </a>
     </div>
       
     </div>

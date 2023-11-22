@@ -4,12 +4,12 @@ import "../style.css";
 import { Storage } from "@plasmohq/storage";
 import toast, { Toaster } from "react-hot-toast";
 import {TrashIcon} from "~icons/TrashIcon";
+import { ApiUrl } from "~config";
 
 const storage = new Storage();
 
 type OptionsFormState =  {
     sheetUrl: string,
-    jsonKey: string
 };
 
 const jsonKeyPlaceholder = `JSON key should look similar to the following
@@ -30,9 +30,8 @@ const jsonKeyPlaceholder = `JSON key should look similar to the following
 function OptionsIndex() {
     const [docId, setDocId] = useState("");
     const [error, setError] = useState<null | string>(null);
-    const [jsonError, setJsonError] = useState<string>("");
+    const [validationError, setValidationError] = useState<string>("");
     const [formState, setFormState] = useState<OptionsFormState>({
-        jsonKey: "",
         sheetUrl: ""
     });
 
@@ -68,7 +67,6 @@ function OptionsIndex() {
     const clearFields = async () => {
         await storage.removeAll();
         setFormState({
-            jsonKey: "",
             sheetUrl: ""
         });
         toast.success("Cleared Config");
@@ -77,11 +75,9 @@ function OptionsIndex() {
     useEffect(() => {
         // load existing data from storage
         async function loadFromStorage() {
-            const key = await storage.get('jsonKey');
             const sheet = await storage.get('sheet');
             parseUrl(sheet);
             setFormState({
-                jsonKey: key,
                 sheetUrl: sheet
             });
             
@@ -93,34 +89,29 @@ function OptionsIndex() {
 
     const saveChanges = async (e : FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setJsonError("");
+        const body = {
+            url: formState.sheetUrl
+        };
 
-        if(error != null) {
-            return;
+        const res = await fetch(`${ApiUrl}/validate`, {
+            method: 'POST',
+            body: JSON.stringify(body)
+        });
+
+        const json = await res.json();
+
+        if(res.ok) {
+
+            await storage.set('sheet', json.sheetId)
+                .then(() => toast.success(json.message))
+                .catch((e) => {
+                    toast.error("Failed to save config");
+                    console.error("failed to save config: ", e);
+                });
+        } else {
+            toast.error("Failed to validate google sheet");
+            setValidationError(json.error);
         }
-
-        // parse the json to check if it's valid
-        try {
-            let json = JSON.parse(formState.jsonKey);
-            if(json.client_email == null) {
-                setJsonError("missing required field 'client_email'");
-                return;
-            }
-
-            if(json.private_key == null) {
-                setJsonError( "missing required field 'private_key'");
-                return;
-            }
-            
-        } catch(e) {
-            setJsonError("Json key could not be parsed");
-            return;
-        }
-
-        await storage.set('jsonKey', formState.jsonKey);
-        await storage.set('sheet', formState.sheetUrl);
-        toast.success("Saved Config");
-
     }
 
     return(
@@ -148,28 +139,13 @@ function OptionsIndex() {
                             </>
                         </div>
                         
-                        <div className="w-full">
-                            <label htmlFor="jsonKey">JSON Key</label>
-                            <textarea placeholder={jsonKeyPlaceholder} required 
-                                id="jsonKey"
-                                className="h-52 w-full p-2 border rounded-lg"
-                                onChange={(e) => {
-                                    setFormState({ ...formState, jsonKey: e.target.value });
-                                }}
-                                value={formState.jsonKey}
-                            >    
-                            </textarea>
-                            <>
-                            {
-                                jsonError != "" ? <p className="text-red-500">{jsonError}</p> : null
-                            }
-                            </>
-                        </div>
-                        
-
+                    
                         <button type="submit" className="bg-blue-200 py-2 font-medium rounded-lg mt-3 hover:bg-blue-600 hover:text-white">
-                            Save
+                            Validate
                         </button>
+                        <p className="text-red-600">
+                            { validationError }
+                        </p>
                         
                     </form>
 
