@@ -2,11 +2,11 @@ import type { PlasmoCSConfig } from "plasmo"
 
 import { useMessage } from "@plasmohq/messaging/hook"
 import type { PageData } from "~PageData";
-import { MessageConstants } from "~message-constants";
+import { MessageConstants, PrefillSupportedPages } from "~constants";
 
 
 export const config: PlasmoCSConfig = {
-  matches: ["https://www.seek.com.au/*"],
+  matches: [PrefillSupportedPages.seek],
   all_frames: true,  
 }
 

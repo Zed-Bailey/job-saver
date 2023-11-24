@@ -184,8 +184,10 @@ function SetupInformation() {
                 <li>Share your Google sheet with the <code>jobsaverbot@jobsaver.iam.gserviceaccount.com</code> email</li>
                 <li>Copy the url of the sheet shared with the service account to the "Google Sheets Url" field above</li>
                 <li>Press the "Connect To Sheet" button</li>
-                <li>If the document is shared with the account above then a new 'Application Tracker' sheet should be created</li>
+                <li>If the document is shared with the account above then a new 'Application Tracker' sheet will be created</li>
             </ol>
+            <hr />
+            Once the sheet has been created <b>it's position and column headers should not be changed</b> otherwise adding jobs to the sheet will fail.
         </div>
     );
 }

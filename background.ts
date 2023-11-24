@@ -1,7 +1,7 @@
 import { sendToContentScript } from "@plasmohq/messaging";
 import { Storage } from "@plasmohq/storage";
 import type { PageData } from "~PageData";
-import { MessageConstants } from "~message-constants";
+import { MessageConstants } from "~constants";
 
 // background service worker
 

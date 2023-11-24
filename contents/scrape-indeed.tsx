@@ -2,11 +2,11 @@ import type { PlasmoCSConfig } from "plasmo"
 
 import { useMessage } from "@plasmohq/messaging/hook"
 import type { PageData } from "~PageData";
-import { MessageConstants } from "~message-constants";
+import { MessageConstants, PrefillSupportedPages } from "~constants";
 
 
 export const config: PlasmoCSConfig = {
-  matches: ["https://au.indeed.com/*"],
+  matches: [PrefillSupportedPages.indeed],
   all_frames: true,  
 }
 

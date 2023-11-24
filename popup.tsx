@@ -9,7 +9,7 @@ import { SettingsIcon } from "~icons/SettingsIcon";
 import { SheetIcon } from "~icons/SheetIcon";
 import toast, { Toaster } from "react-hot-toast";
 import { ApiUrl } from "~config";
-import { MessageConstants } from "~message-constants";
+import { MessageConstants } from "~constants";
 
 
 const storage = new Storage();
