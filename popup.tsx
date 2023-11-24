@@ -11,21 +11,14 @@ import { Storage } from "@plasmohq/storage";
 import { SettingsIcon } from "~icons/SettingsIcon";
 import { SheetIcon } from "~icons/SheetIcon";
 import toast, { Toaster } from "react-hot-toast";
-
-const SCOPES = [
-  'https://www.googleapis.com/auth/spreadsheets',
-  'https://www.googleapis.com/auth/drive.file',
-];
-
-
-
+import { ApiUrl } from "~config";
+import { MessageConstants } from "~message-constants";
 
 
 const storage = new Storage();
 
 function IndexPopup() {
   const [docId, setDocId] = useState("");
-  const [googleDoc, setGoogleDoc] = useState<null | GoogleSpreadsheet>(null);
   const [errors, setErrors] = useState<string[]>([]);
   
   const [isSaving, setIsSaving] = useState(false);
@@ -39,27 +32,35 @@ function IndexPopup() {
 
   async function addNewJob(data: PageData) {
     setIsSaving(true);
-    try {
     
-      await googleDoc.loadInfo();
-      
-      await googleDoc.sheetsByIndex[0].addRow({
-        company: data.company,
-        role: data.role,
-        url: data.url
-      });
-      toast.success("Saved Job");
-    } catch(e) {
-      toast.error("Failed to save job")
-    } finally {
-      setIsSaving(false);
+    const body = {
+      ...data,
+      sheetId: docId
+    };
+
+    const res = await fetch(`${ApiUrl}/job`, {
+        body: JSON.stringify(body),
+        method: "POST"
+    });
+
+    const json = await res.json();
+    if(res.ok) {
+      toast.success(json.message);
+    } else {
+      toast.error("Failed to save the job");
+
     }
+    
+    
+    
+    setIsSaving(false);
+    
     
   }
 
   async function parsePageForDetails() {
     try {
-      const res: PageData = await sendToContentScript({ name: "scrape-page" });
+      const res: PageData = await sendToContentScript({ name: MessageConstants.SCRAPE_PAGE });
       console.log(res);
       setFormState({
         company: res.company,
@@ -72,53 +73,16 @@ function IndexPopup() {
     
   }
 
-  async function loadConfigFromStorage() {
-    try {
+  async function loadConfigFromStorage() {    
 
-      const key = await storage.get('jsonKey');
-      const sheet = await storage.get('sheet');
-      let jsonKey: any;
-      
-      if(key == null) {
-        throw new Error("JSON key not set");
-      }
+    const sheet = await storage.get('sheet');
 
-      try {
-        jsonKey = JSON.parse(key);
-      } catch(e) {
-        throw new Error('JSON key is invalid JSON');
-      }
-
-      // create a new google auth jwt token
-      let token = new JWT({
-        email: jsonKey.client_email,
-        key: jsonKey.private_key,
-        scopes: SCOPES,
-      });
-      
-      try {
-        let url = new URL(sheet);
-        
-        if(url.hostname !== "docs.google.com") {
-          throw new Error("Only google sheets are supported");
-        }
-
-        let sections = url.pathname.split('/');
-        if(sections.length >= 4) {
-          setGoogleDoc(new GoogleSpreadsheet(sections[3], token));
-          setDocId(sections[3]);
-          
-        } else {
-          throw new Error("Could not parse document id from url");
-        }
-        
-      } catch(e) {
-        throw new Error('Invalid URL');
-      }
-    } catch(e) {
-      setErrors([...errors, e.message]);
+    if(sheet == null || sheet == "") {
+      setErrors([...errors, "Google Sheet not configured"]);
+    } else {
+      setDocId(sheet);
     }
-    
+
   }
 
 
@@ -183,7 +147,7 @@ function IndexPopup() {
         href={`https://docs.google.com/spreadsheets/d/${docId}/edit#gid=0`}
         target="_blank"
         rel="noreferrer"
-        className="flex justify-center items-center gap-2 p-2 rounded-lg hover:bg-gray-100 font-medium min-w-fit"
+        className="flex justify-center items-center gap-2 p-2 rounded-lg hover:bg-gray-100 font-medium min-w-fit text-slate-500 hover:text-slate-800"
         
       >
         <SheetIcon className={"w-5 h-5"}/>
@@ -197,10 +161,10 @@ function IndexPopup() {
           chrome.runtime.openOptionsPage();
         }
       }}
-      className="flex justify-center items-center gap-2 p-2 rounded-lg hover:bg-gray-100 font-medium min-w-fit"
+      className="flex justify-center items-center gap-2 p-2 rounded-lg hover:bg-gray-100 font-medium min-w-fit text-slate-500 hover:text-slate-800"
       >
          <SettingsIcon className="w-5 h-5"/>
-         options panel
+         Options Panel
       </button>
     </div>
     <div className="w-full flex justify-center mt-2">
