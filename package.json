@@ -39,6 +39,15 @@
     "host_permissions": [
       "https://*/*",
       "http://*/*"
-    ]
+    ],
+    "commands": {
+      "save-job": {
+          "suggested_key": {
+              "default": "Ctrl+Shift+S",
+              "mac": "Command+Shift+S"
+          },
+          "description" : "Save the job"
+      }
+    }
   }
 }
