@@ -2,6 +2,7 @@ import type { PlasmoCSConfig } from "plasmo"
 
 import { useMessage } from "@plasmohq/messaging/hook"
 import type { PageData } from "~PageData";
+import { MessageConstants } from "~message-constants";
 
 
 export const config: PlasmoCSConfig = {
@@ -32,11 +33,13 @@ const scrapeCompany = () => {
 
 const ScrapeSeekPage = () => {
   useMessage<string, PageData>(async (req, res) => {
+    if(req.name == MessageConstants.SCRAPE_PAGE) {
       res.send({
         company: scrapeCompany(),
         role: scrapeJobTitle(),
         url: scrapeUrl()
       });
+    }
   });
 }
 
