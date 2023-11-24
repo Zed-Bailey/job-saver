@@ -30,30 +30,33 @@ const jsonKeyPlaceholder = `JSON key should look similar to the following
 function OptionsIndex() {
     const [docId, setDocId] = useState("");
     const [error, setError] = useState<null | string>(null);
-    const [validationError, setValidationError] = useState<string>("");
+    const [validationMessage, setValidationMessage] = useState({error: "", success: ""});
     const [formState, setFormState] = useState<OptionsFormState>({
         sheetUrl: ""
     });
 
-    function parseUrl(urlString) {
+    function parseUrl(urlString: string) {
+        
+        if(urlString == "" || urlString == null) {
+            return
+        }
         // validate url
         try {
             let url = new URL(urlString);
             // validate that the host is google docs
             if(url.hostname !== "docs.google.com") {
-                setError("Only google sheets are supported");
-                return;
+                throw new Error("Only google sheets are supported");
             }
             // get the document id from the pathname
             let sections = url.pathname.split('/');
             if(sections.length >= 4) {
                 setDocId(sections[3]);
             } else {
-                setError("Could not parse document id from url");
+                throw new Error("Could not parse document id from url");
             }
             
         } catch(e) {
-            setError("Invalid url");
+            setError(e.message);
         }
     }
 
@@ -76,11 +79,11 @@ function OptionsIndex() {
         // load existing data from storage
         async function loadFromStorage() {
             const sheet = await storage.get('sheet');
+            const url = `https://docs.google.com/spreadsheets/d/${sheet}/`;
             parseUrl(sheet);
             setFormState({
                 sheetUrl: sheet
-            });
-            
+            });   
         }
 
         loadFromStorage();
@@ -101,7 +104,7 @@ function OptionsIndex() {
         const json = await res.json();
 
         if(res.ok) {
-
+            setValidationMessage({success: json.message, error: null});
             await storage.set('sheet', json.sheetId)
                 .then(() => toast.success(json.message))
                 .catch((e) => {
@@ -110,7 +113,7 @@ function OptionsIndex() {
                 });
         } else {
             toast.error("Failed to validate google sheet");
-            setValidationError(json.error);
+            setValidationMessage({error: json.error, success: null});
         }
     }
 
@@ -126,9 +129,11 @@ function OptionsIndex() {
                         
                         <div className="w-full mb-3">
                             <label htmlFor="sheetUrl">Google Sheets Url</label>
-                            <input 
-                            className="w-full p-2 rounded-md border"
-                            type="text" required placeholder="document url" id="sheetUrl" onChange={onDocUrlChange} value={formState.sheetUrl}/>
+                            <input
+                                className="w-full p-2 rounded-md border"
+                                type="text" required placeholder="document url" id="sheetUrl" onChange={onDocUrlChange} value={formState.sheetUrl}
+                            />
+
                             <>
                                 {
                                     error != null ? <p className="text-red-500">{error}</p> : <></>
@@ -140,17 +145,16 @@ function OptionsIndex() {
                         </div>
                         
                     
-                        <button type="submit" className="bg-blue-200 py-2 font-medium rounded-lg mt-3 hover:bg-blue-600 hover:text-white">
-                            Validate
+                        <button type="submit" className="bg-indigo-400 py-2 font-medium rounded-lg mt-3 hover:bg-indigo-600 hover:text-white">
+                            Connect To Sheet
                         </button>
-                        <p className="text-red-600">
-                            { validationError }
-                        </p>
+                        <div>
+                            {validationMessage.error != null ? <p className="text-red-600">{validationMessage.error}</p> : null}
+                            {validationMessage.success != null ? <p>{validationMessage.success}</p> : null}
+                        </div>
                         
                     </form>
 
-                 
-                    
                     <hr className="my-3"/>
                     <SetupInformation />
 
@@ -174,41 +178,13 @@ function SetupInformation() {
     return(
         <div className="w-full">
             <h1 className="text-2xl">Setup</h1>
-            
-            <h2 className="text-xl mt-2">Creating A Google Cloud Project</h2>
+            <hr/>
+            <h2 className="text-xl mt-3 mb-1">Connecting To The Sheet</h2>
             <ol className="list-decimal ml-5">
-                <li>Go to the Google Developers Console</li>
-                <li>Create a new project and select it</li>
-                <li>select "Enabled APIs & Services"</li>
-                <li>Search for "sheets"</li>
-                <li>Click on "Google Sheets API"</li>
-                <li>Click the blue "Enable" button</li>
-            </ol>
-
-    
-            <h2 className="text-xl mt-3">Creating A Service Account</h2>
-            <ol className="list-decimal ml-5">
-                <li>In the sidebar on the left, select "APIs & Services" then "Credentials"</li>
-                <li>Click blue "+ CREATE CREDENTIALS" and select "Service account" option</li>
-                <li>Enter name, description, click "CREATE"</li>
-                <li>skip permissions and click "CONTINUE"</li>
-                <li>Click "+ CREATE KEY" button</li>
-                <li>Select the "JSON" key type option</li>
-                <li>Click the "Create" button</li>
-                <li>The JSON key file is generated and downloaded</li>
-                <li>click "DONE"</li>
-                <li>note your service account's email address</li>
-
-                <li>Share the sheet document to use with this extension with your service account using the email noted above</li>
-            </ol>
-
-
-            <h2 className="text-xl mt-3">Connecting To The Sheet</h2>
-            <ol className="list-decimal ml-5">
+                <li>Share your Google sheet with the <code>jobsaverbot@jobsaver.iam.gserviceaccount.com</code> email</li>
                 <li>Copy the url of the sheet shared with the service account to the "Google Sheets Url" field above</li>
-                <li>Ensure the sheet has columns with the following headers: "company", "role", "url"</li>
-                <li>Copy the contents of the JSON key file downloaded from "Creating A Service Account" into the "JSON Key" field above</li>
-                <li>Press the "Save" button</li>
+                <li>Press the "Connect To Sheet" button</li>
+                <li>If the document is shared with the account above then a new 'Application Tracker' sheet should be created</li>
             </ol>
         </div>
     );
