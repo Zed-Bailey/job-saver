@@ -1,7 +1,4 @@
 import { useEffect, useState, type FormEvent, type ChangeEvent } from "react"
-import { JWT } from 'google-auth-library'
-
-import { GoogleSpreadsheet } from "google-spreadsheet";
 
 import { sendToContentScript } from "@plasmohq/messaging";
 import type { PageData } from "~PageData";
@@ -48,7 +45,6 @@ function IndexPopup() {
       toast.success(json.message);
     } else {
       toast.error("Failed to save the job");
-
     }
     
     

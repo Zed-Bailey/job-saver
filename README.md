@@ -16,6 +16,9 @@ This extension has only been tested on **Chrome** and **Firefox** browsers
 
 
 ## Supported sites for prefill
+Automatically fetch the job details from the page to prefill the job details form
+
+
 Currently the prefill functionality supports the following sites
 - [X] au.indeed.com
 - [X] seek.com.au
@@ -23,12 +26,18 @@ Currently the prefill functionality supports the following sites
 
 Job details can still be manually entered from sites that are not currently supported
 
+### Quick save keyboard shortcut
+On the sites supported by the automatic prefill the quick-save keyboard shortcut is available
+
+on macOS the shortcut is `Command+Shift+S` and on everything else it's `Ctrl+Shift+S`
+
+
 ## What's it look like?
 With no forms prefilled the extension will look like the below image
 
 The "View Sheet" button will open the connected google sheet in a new tab.
 
-The "options panel" button will open the extensions configuration page where the google sheet and json key can be configured.
+The "Options Panel" button will open the extensions configuration page where the google sheet and json key can be configured.
 
 <p align="center">
     <img src="docs/extension.png" style="border: 2px solid; border-color:black;"/> 
@@ -62,6 +71,10 @@ If developing on firefox then the storage api will not work when adding the exte
 ```
 The storage API will not work with a temporary addon ID. Please add an explicit addon ID to your manifest. For more information see https://mzl.la/3lPk1aE.
 ```
+
+## API
+To save the jobs to the google sheet the accompanying REST API is required, this can be found [here](https://github.com/Zed-Bailey/job-saver-api)
+
 
 ## Targets
 to build the extension for a different browser other then chrome you can use the `--target={manifest version}` flag

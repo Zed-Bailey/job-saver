@@ -3,9 +3,11 @@ import { Storage } from "@plasmohq/storage";
 import type { PageData } from "~PageData";
 import { MessageConstants } from "~message-constants";
 
+// background service worker
 
 export {}
 
+// register a command listener
 chrome.commands.onCommand.addListener(async (command) => {
     // listen for the save job command triggered by the keybord shortcut    
     if(command == 'save-job') {
@@ -13,12 +15,14 @@ chrome.commands.onCommand.addListener(async (command) => {
         let data: PageData | null = null;
 
         try {
+            // fetch the sheet id from the service worker as you cant use the storage api ina content script
             const storage = new Storage();
             sheetId = await storage.getItem("sheet");
-            // scrape the page
+            
+            // get the job data from the page
             data = await sendToContentScript({name: MessageConstants.SCRAPE_PAGE});
         } catch(e) {
-            console.error("JobSaver :: Error ",e);
+            console.error(e);
         }
 
         await sendToContentScript({ name: MessageConstants.SAVE_JOB_SHORTCUT, body: JSON.stringify({sheetId: sheetId, data: data}) });
