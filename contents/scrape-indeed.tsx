@@ -2,11 +2,13 @@ import type { PlasmoCSConfig } from "plasmo"
 
 import { useMessage } from "@plasmohq/messaging/hook"
 import type { PageData } from "~PageData";
-import { MessageConstants, PrefillSupportedPages } from "~constants";
+import { MessageConstants } from "~constants";
+
+
 
 
 export const config: PlasmoCSConfig = {
-  matches: [PrefillSupportedPages.indeed],
+  matches: ["https://au.indeed.com/*"],
   all_frames: true,  
 }
 
@@ -16,7 +18,7 @@ const scrapeUrl = () => {
   let sections = url.pathname.split('/');
   
   if(sections[1] !== "viewjob") {
-    let key = url.search.replace("?vjk=", "");
+    let key = url.searchParams.get("vjk");
     return `${url.origin}/viewjob?jk=${key}`;
   }
 

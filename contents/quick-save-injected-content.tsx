@@ -1,7 +1,7 @@
 import type { PlasmoCSConfig } from "plasmo";
 import { useMessage } from "@plasmohq/messaging/hook";
 import type { PageData } from "~PageData";
-import { MessageConstants, PrefillSupportedPagesUrlArray } from "~constants";
+import { MessageConstants } from "~constants";
 import toast, { Toaster, type Toast } from "react-hot-toast";
 
 import styleText from "data-text:../style.css"
@@ -9,9 +9,14 @@ import type { PlasmoGetStyle } from "plasmo"
 import { ApiUrl } from "~config";
  
 
+const supportedUrls = [
+  "https://www.linkedin.com/*",
+  "https://www.seek.com.au/*",
+  "https://au.indeed.com/*"
+];
 
 export const config: PlasmoCSConfig = {
-  matches: PrefillSupportedPagesUrlArray,
+  matches: supportedUrls,
 }
 
 // exports the tailwind css styles

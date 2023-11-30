@@ -2,11 +2,11 @@ import type { PlasmoCSConfig } from "plasmo"
 
 import { useMessage } from "@plasmohq/messaging/hook"
 import type { PageData } from "~PageData";
-import { MessageConstants, PrefillSupportedPages } from "~constants";
+import { MessageConstants } from "~constants";
 
 
 export const config: PlasmoCSConfig = {
-  matches: [PrefillSupportedPages.linkedin],
+  matches: ["https://www.linkedin.com/*"],
   all_frames: true,  
 }
 
