@@ -4,12 +4,12 @@ import "../style.css";
 import { Storage } from "@plasmohq/storage";
 import toast, { Toaster } from "react-hot-toast";
 import {TrashIcon} from "~icons/TrashIcon";
+import { ApiUrl } from "~config";
 
 const storage = new Storage();
 
 type OptionsFormState =  {
     sheetUrl: string,
-    jsonKey: string
 };
 
 const jsonKeyPlaceholder = `JSON key should look similar to the following
@@ -30,31 +30,35 @@ const jsonKeyPlaceholder = `JSON key should look similar to the following
 function OptionsIndex() {
     const [docId, setDocId] = useState("");
     const [error, setError] = useState<null | string>(null);
-    const [jsonError, setJsonError] = useState<string>("");
+    const [validationMessage, setValidationMessage] = useState({error: "", success: ""});
     const [formState, setFormState] = useState<OptionsFormState>({
-        jsonKey: "",
         sheetUrl: ""
     });
+    const [isLoading, setIsLoading] = useState(false);
 
-    function parseUrl(urlString) {
+
+    function parseUrl(urlString: string) {
+        
+        if(urlString == "" || urlString == null) {
+            return
+        }
         // validate url
         try {
             let url = new URL(urlString);
             // validate that the host is google docs
             if(url.hostname !== "docs.google.com") {
-                setError("Only google sheets are supported");
-                return;
+                throw new Error("Only google sheets are supported");
             }
             // get the document id from the pathname
             let sections = url.pathname.split('/');
             if(sections.length >= 4) {
                 setDocId(sections[3]);
             } else {
-                setError("Could not parse document id from url");
+                throw new Error("Could not parse document id from url");
             }
             
         } catch(e) {
-            setError("Invalid url");
+            setError(e.message);
         }
     }
 
@@ -68,7 +72,6 @@ function OptionsIndex() {
     const clearFields = async () => {
         await storage.removeAll();
         setFormState({
-            jsonKey: "",
             sheetUrl: ""
         });
         toast.success("Cleared Config");
@@ -77,14 +80,12 @@ function OptionsIndex() {
     useEffect(() => {
         // load existing data from storage
         async function loadFromStorage() {
-            const key = await storage.get('jsonKey');
             const sheet = await storage.get('sheet');
+            const url = `https://docs.google.com/spreadsheets/d/${sheet}/`;
             parseUrl(sheet);
             setFormState({
-                jsonKey: key,
                 sheetUrl: sheet
-            });
-            
+            });   
         }
 
         loadFromStorage();
@@ -93,34 +94,31 @@ function OptionsIndex() {
 
     const saveChanges = async (e : FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setJsonError("");
+        setIsLoading(true);
+        const body = {
+            url: formState.sheetUrl
+        };
 
-        if(error != null) {
-            return;
+        const res = await fetch(`${ApiUrl}/validate`, {
+            method: 'POST',
+            body: JSON.stringify(body)
+        });
+
+        const json = await res.json();
+
+        if(res.ok) {
+            setValidationMessage({success: json.message, error: null});
+            await storage.set('sheet', json.sheetId)
+                .then(() => toast.success(json.message))
+                .catch((e) => {
+                    toast.error("Failed to save config");
+                    console.error("failed to save config: ", e);
+                });
+        } else {
+            toast.error("Failed to validate google sheet");
+            setValidationMessage({error: json.error, success: null});
         }
-
-        // parse the json to check if it's valid
-        try {
-            let json = JSON.parse(formState.jsonKey);
-            if(json.client_email == null) {
-                setJsonError("missing required field 'client_email'");
-                return;
-            }
-
-            if(json.private_key == null) {
-                setJsonError( "missing required field 'private_key'");
-                return;
-            }
-            
-        } catch(e) {
-            setJsonError("Json key could not be parsed");
-            return;
-        }
-
-        await storage.set('jsonKey', formState.jsonKey);
-        await storage.set('sheet', formState.sheetUrl);
-        toast.success("Saved Config");
-
+        setIsLoading(false);
     }
 
     return(
@@ -135,9 +133,11 @@ function OptionsIndex() {
                         
                         <div className="w-full mb-3">
                             <label htmlFor="sheetUrl">Google Sheets Url</label>
-                            <input 
-                            className="w-full p-2 rounded-md border"
-                            type="text" required placeholder="document url" id="sheetUrl" onChange={onDocUrlChange} value={formState.sheetUrl}/>
+                            <input
+                                className="w-full p-2 rounded-md border"
+                                type="text" required placeholder="document url" id="sheetUrl" onChange={onDocUrlChange} value={formState.sheetUrl}
+                            />
+
                             <>
                                 {
                                     error != null ? <p className="text-red-500">{error}</p> : <></>
@@ -148,33 +148,24 @@ function OptionsIndex() {
                             </>
                         </div>
                         
-                        <div className="w-full">
-                            <label htmlFor="jsonKey">JSON Key</label>
-                            <textarea placeholder={jsonKeyPlaceholder} required 
-                                id="jsonKey"
-                                className="h-52 w-full p-2 border rounded-lg"
-                                onChange={(e) => {
-                                    setFormState({ ...formState, jsonKey: e.target.value });
-                                }}
-                                value={formState.jsonKey}
-                            >    
-                            </textarea>
-                            <>
-                            {
-                                jsonError != "" ? <p className="text-red-500">{jsonError}</p> : null
+                    
+                        <button type="submit" className="bg-indigo-500 py-2 font-medium rounded-lg mt-3 hover:bg-indigo-600 text-white flex justify-center items-center" disabled={isLoading}>
+                            {isLoading ?
+                                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                : null
                             }
-                            </>
-                        </div>
-                        
-
-                        <button type="submit" className="bg-blue-200 py-2 font-medium rounded-lg mt-3 hover:bg-blue-600 hover:text-white">
-                            Save
+                            {isLoading ? "Connecting..." : "Connect To Sheet"}
                         </button>
+                        <div>
+                            {validationMessage.error != null ? <p className="text-red-600">{validationMessage.error}</p> : null}
+                            {validationMessage.success != null ? <p>{validationMessage.success}</p> : null}
+                        </div>
                         
                     </form>
 
-                 
-                    
                     <hr className="my-3"/>
                     <SetupInformation />
 
@@ -198,42 +189,16 @@ function SetupInformation() {
     return(
         <div className="w-full">
             <h1 className="text-2xl">Setup</h1>
-            
-            <h2 className="text-xl mt-2">Creating A Google Cloud Project</h2>
+            <hr/>
+            <h2 className="text-xl mt-3 mb-1">Connecting To The Sheet</h2>
             <ol className="list-decimal ml-5">
-                <li>Go to the Google Developers Console</li>
-                <li>Create a new project and select it</li>
-                <li>select "Enabled APIs & Services"</li>
-                <li>Search for "sheets"</li>
-                <li>Click on "Google Sheets API"</li>
-                <li>Click the blue "Enable" button</li>
-            </ol>
-
-    
-            <h2 className="text-xl mt-3">Creating A Service Account</h2>
-            <ol className="list-decimal ml-5">
-                <li>In the sidebar on the left, select "APIs & Services" then "Credentials"</li>
-                <li>Click blue "+ CREATE CREDENTIALS" and select "Service account" option</li>
-                <li>Enter name, description, click "CREATE"</li>
-                <li>skip permissions and click "CONTINUE"</li>
-                <li>Click "+ CREATE KEY" button</li>
-                <li>Select the "JSON" key type option</li>
-                <li>Click the "Create" button</li>
-                <li>The JSON key file is generated and downloaded</li>
-                <li>click "DONE"</li>
-                <li>note your service account's email address</li>
-
-                <li>Share the sheet document to use with this extension with your service account using the email noted above</li>
-            </ol>
-
-
-            <h2 className="text-xl mt-3">Connecting To The Sheet</h2>
-            <ol className="list-decimal ml-5">
+                <li>Share your Google sheet with the <code>jobsaverbot@jobsaver.iam.gserviceaccount.com</code> email</li>
                 <li>Copy the url of the sheet shared with the service account to the "Google Sheets Url" field above</li>
-                <li>Ensure the sheet has columns with the following headers: "company", "role", "url"</li>
-                <li>Copy the contents of the JSON key file downloaded from "Creating A Service Account" into the "JSON Key" field above</li>
-                <li>Press the "Save" button</li>
+                <li>Press the "Connect To Sheet" button</li>
+                <li>If the document is shared with the account above then a new 'Application Tracker' sheet will be created</li>
             </ol>
+            <hr />
+            Once the sheet has been created <b>it's position and column headers should not be changed</b> otherwise adding jobs to the sheet will fail.
         </div>
     );
 }

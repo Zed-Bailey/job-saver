@@ -2,6 +2,9 @@ import type { PlasmoCSConfig } from "plasmo"
 
 import { useMessage } from "@plasmohq/messaging/hook"
 import type { PageData } from "~PageData";
+import { MessageConstants } from "~constants";
+
+
 
 
 export const config: PlasmoCSConfig = {
@@ -15,7 +18,7 @@ const scrapeUrl = () => {
   let sections = url.pathname.split('/');
   
   if(sections[1] !== "viewjob") {
-    let key = url.search.replace("?vjk=", "");
+    let key = url.searchParams.get("vjk");
     return `${url.origin}/viewjob?jk=${key}`;
   }
 
@@ -24,6 +27,7 @@ const scrapeUrl = () => {
 const scrapeJobTitle = () => {
   let ele = document.querySelector("[class*='-title-container']");
   let text = ele.textContent;
+  text = text.replace("- job post", "");
   return text;
 }
 
@@ -34,13 +38,15 @@ const scrapeCompany = () => {
 }
 
 const ScrapeIndeedPage = () => {
-    useMessage<string, PageData>(async (req, res) => {
-        res.send({
-          company: scrapeCompany(),
-          role: scrapeJobTitle(),
-          url: scrapeUrl()
-        });
-    });
+  useMessage<string, PageData>(async (req, res) => {
+    if(req.name == MessageConstants.SCRAPE_PAGE) {
+      res.send({
+        company: scrapeCompany(),
+        role: scrapeJobTitle(),
+        url: scrapeUrl()
+      });
+    }
+  });
 }
 
 
