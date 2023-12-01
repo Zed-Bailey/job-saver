@@ -54,9 +54,9 @@ When the save button is clicked the role is added to the google sheet.
 
 
 ## Configuration
-To configure the key for the service account and the google sheets url, open the extension and click the "options panel" button.
+To configure the extension open the options screen and enter the url to the google sheet.
 
-This will open a new page where you can configure the sheets url and json service account key
+This will then query the api to validate that you have shared the url with the service account and it will create a new google sheet with the required headers for you.
 
 ## Development
 
@@ -95,5 +95,3 @@ npm run build --  --zip
 This will create a zip bundle for chrome target ready for install.
 
 To build the bundle for other platforms see the "Targets" section above
-
-
