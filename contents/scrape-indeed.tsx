@@ -27,6 +27,7 @@ const scrapeUrl = () => {
 const scrapeJobTitle = () => {
   let ele = document.querySelector("[class*='-title-container']");
   let text = ele.textContent;
+  text = text.replace("- job post", "");
   return text;
 }
 
