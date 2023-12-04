@@ -1,7 +1,7 @@
 {
   "name": "job-saver",
   "displayName": "Job saver",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Zeds job saving extension",
   "author": "Zed Bailey",
   "scripts": {
